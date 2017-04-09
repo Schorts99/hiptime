@@ -2,15 +2,17 @@ class ItemsController < ApplicationController
   before_action :find_item, except: [:index, :new, :create]
 
   def index
-    @items = Item.all.order('created_at DESC')
+    if user_signed_in?
+      @items = Item.where(user_id: current_user.id).order('created_at DESC')
+    end
   end
 
   def new
-    @item = Item.new
+    @item = current_user.items.build
   end
 
   def create
-    @item = Item.new(item_params)
+    @item = current_user.items.build(item_params)
 
     if @item.save
       flash[:notice] = "Tarea creada"
@@ -34,6 +36,11 @@ class ItemsController < ApplicationController
   def destroy
     @item.destroy
     flash[:notice] = "Tarea eliminada"
+    redirect_to root_path
+  end
+
+  def complete
+    @item.update_attribute(:completed_at, Time.now)
     redirect_to root_path
   end
 
